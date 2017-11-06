@@ -1,0 +1,53 @@
+---
+- hosts: containers
+  remote_user: root
+  tasks:
+    - name: installer nginx
+      apt:
+        name: nginx
+        state: latest
+
+    - service:
+        name: nginx
+        state: started
+
+    - name: installer git
+      apt:
+        name: git
+        state: latest
+
+    - name: installer curl
+      apt:
+        name: curl
+        state: latest
+
+    - name: update
+      shell: curl -sL https://deb.nodesource.com/setup_8.x | sh
+
+    - name: installer nodejs and npm
+      apt:
+        name: nodejs
+        state: latest
+
+    - name: cloner
+      git:
+        repo: https://git.mrzee.fr/student/my-node-project.git
+        dest: /var/www/my-node-project
+
+    - name: installer dependences
+      npm:
+        path: /var/www/my-node-project/myapp/
+
+    - name: installer pm2
+      npm:
+         name: pm2
+         global: yes
+
+    - name: run app
+      shell: pm2 start /var/www/my-node-project/myapp/bin/www
+
+    - name: copy vhost to nginx sites-enabled
+      shell: cp /var/www/my-node-project/vhost /etc/nginx/sites-enabled/default
+
+    - name: restart nginx
+      shell: service nginx restart
