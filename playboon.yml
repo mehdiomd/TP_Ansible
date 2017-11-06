@@ -1,53 +1,49 @@
 ---
 - hosts: containers
-  remote_user: root
-  tasks:
-    - name: installer nginx
-      apt:
-        name: nginx
-        state: latest
+Â  remote_user: root
+Â  tasks:
+Â Â Â  - name: installer nginx
+Â Â Â Â Â  apt: pkg=nginx state=installed update_cache=true
+      notify: 
+         - start nginx
 
-    - service:
-        name: nginx
-        state: started
+Â Â Â  - name: installer git
+Â Â Â Â Â  apt:
+Â Â Â Â Â Â Â  name: git
+Â Â Â Â Â Â Â  state: latest
 
-    - name: installer git
-      apt:
-        name: git
-        state: latest
+Â Â Â  - name: installer curl
+Â Â Â Â Â  apt:
+Â Â Â Â Â Â Â  name: curl
+Â Â Â Â Â Â Â  state: latest
 
-    - name: installer curl
-      apt:
-        name: curl
-        state: latest
+Â Â Â  - name: update
+Â Â Â Â Â  shell: curl -sL https://deb.nodesource.com/setup_8.x | sh
 
-    - name: update
-      shell: curl -sL https://deb.nodesource.com/setup_8.x | sh
+Â Â Â  - name: installer nodejs and npm
+Â Â Â Â Â  apt:
+Â Â Â Â Â Â Â  name: nodejs
+Â Â Â Â Â Â Â  state: latest
 
-    - name: installer nodejs and npm
-      apt:
-        name: nodejs
-        state: latest
+Â Â Â  - name: cloner
+Â Â Â Â Â  git:
+Â Â Â Â Â Â Â  repo: https://git.mrzee.fr/student/my-node-project.git
+Â Â Â Â Â Â Â  dest: /var/www/my-node-project
 
-    - name: cloner
-      git:
-        repo: https://git.mrzee.fr/student/my-node-project.git
-        dest: /var/www/my-node-project
+Â Â Â  - name: installer dependences
+Â Â Â Â Â  npm:
+Â Â Â Â Â Â Â  path: /var/www/my-node-project/myapp/
 
-    - name: installer dependences
-      npm:
-        path: /var/www/my-node-project/myapp/
+Â Â Â  - name: installer pm2
+Â Â Â Â Â  npm:
+Â Â Â Â Â Â Â Â  name: pm2
+Â Â Â Â Â Â Â Â  global: yes
 
-    - name: installer pm2
-      npm:
-         name: pm2
-         global: yes
+Â Â Â  - name: run app
+Â Â Â Â Â  shell: pm2 start /var/www/my-node-project/myapp/bin/www
 
-    - name: run app
-      shell: pm2 start /var/www/my-node-project/myapp/bin/www
+Â Â Â  - name: copy vhost to nginx sites-enabled
+Â Â Â Â Â  shell: cp /var/www/my-node-project/vhost /etc/nginx/sites-enabled/default
 
-    - name: copy vhost to nginx sites-enabled
-      shell: cp /var/www/my-node-project/vhost /etc/nginx/sites-enabled/default
-
-    - name: restart nginx
-      shell: service nginx restart
+Â Â Â  - name: restart nginx
+Â Â Â Â Â  shell: service nginx restart
